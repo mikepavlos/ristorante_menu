@@ -8,8 +8,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      - db
+    entrypoint: >
+      bash -c "
+        while !</dev/tcp/db/5432; do sleep 1; done &&
+        uvicorn menu_app.main:app --reload --workers 1 --host 0.0.0.0
+      "
     env_file:
       - .env
     ports:
