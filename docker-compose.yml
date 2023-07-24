@@ -1,0 +1,23 @@
+version: '3.9'
+
+volumes:
+  db_data:
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:15.1-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
