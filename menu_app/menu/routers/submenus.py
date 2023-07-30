@@ -15,11 +15,14 @@ router = APIRouter()
 def get_all_submenus():
     submenus = db.query(Submenu).all()
 
-    if submenus is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='submenus not found'
-        )
+    # if submenus is None:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND,
+    #         detail='submenus not found'
+    #     )
+
+    for submenu in submenus:
+        submenu.dishes_count = db.query(Dish.submenu_id == Submenu.id).count()
 
     return submenus
 
@@ -66,9 +69,7 @@ def get_submenu(submenu_id: UUID):
             detail='submenu not found'
         )
 
-    submenu.dishes_count = db.query(
-        Dish.submenu_id ==
-        Submenu.id).count()
+    submenu.dishes_count = db.query(Dish.submenu_id == Submenu.id).count()
 
     return submenu
 
@@ -89,6 +90,7 @@ def update_submenu(submenu_id: UUID, submenu: SubmenuBase):
 
     submenu_update.title = submenu.title
     submenu_update.description = submenu.description
+    submenu_update.dishes_count = db.query(Dish.submenu_id == Submenu.id).count()
 
     db.commit()
     db.refresh(submenu_update)

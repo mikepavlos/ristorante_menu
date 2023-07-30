@@ -24,7 +24,7 @@ git clone https://github.com/mikepavlos/ristorante_menu.git
  docker compose up -d --build
 ```
 
-Документация к API `app/v1/docs#`
+Документация к API `localhost:8000/` либо `localhost:8000/docs#`
 
 ----
 

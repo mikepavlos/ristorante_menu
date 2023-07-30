@@ -1,10 +1,10 @@
 version: '3.9'
 
 volumes:
-  db_data:
+  db_data_test:
 
 services:
-  backend:
+  test:
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,12 +16,12 @@ services:
       db:
         condition: service_healthy
     entrypoint: >
-      sh -c "uvicorn menu_app.main:app --host 0.0.0.0 --reload"
+      sh -c "pytest tests -vv"
 
   db:
     image: postgres:15.1-alpine
     volumes:
-      - db_data:/var/lib/postgresql/data/
+      - db_data_test:/var/lib/postgresql/data/
     env_file:
       - .env
     healthcheck:

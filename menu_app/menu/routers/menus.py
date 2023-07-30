@@ -17,15 +17,14 @@ router = APIRouter()
 def get_all_menus():
     menus = db.query(Menu).all()
 
-    if menus is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='menus not found'
-        )
+    # if menus is None:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND,
+    #         detail='menus not found'
+    #     )
 
     for menu in menus:
-        menu.submenus_count = db.query(
-            Menu.id == Submenu.menu_id).count()
+        menu.submenus_count = db.query(Menu.id == Submenu.menu_id).count()
 
     return menus
 
@@ -63,12 +62,12 @@ def get_menu(menu_id: UUID):
             detail='menu not found'
         )
 
-    menu.submenus_count = db.query(
-        Submenu.menu_id == menu_id).count()
-
-    menu.dishes_count = db.query(
-        Dish.submenu_id == Submenu.id).where(
-        Submenu.menu_id == menu_id).count()
+    menu.submenus_count = db.query(Submenu.menu_id == menu_id).count()
+    menu.dishes_count = (
+        db.query(Dish.submenu_id == Submenu.id)
+        .where(Submenu.menu_id == menu_id)
+        .count()
+    )
 
     return menu
 
@@ -89,6 +88,12 @@ def update_menu(menu_id: UUID, menu: MenuBase):
 
     menu_update.title = menu.title
     menu_update.description = menu.description
+    menu_update.submenus_count = db.query(Submenu.menu_id == menu_id).count()
+    menu_update.dishes_count = (
+        db.query(Dish.submenu_id == Submenu.id)
+        .where(Submenu.menu_id == menu_id)
+        .count()
+    )
 
     db.commit()
     db.refresh(menu_update)

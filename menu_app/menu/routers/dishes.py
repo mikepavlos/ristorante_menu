@@ -15,11 +15,11 @@ router = APIRouter()
 def get_all_dishes():
     dishes = db.query(Dish).all()
 
-    if dishes is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='dishes not found'
-        )
+    # if dishes is None:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND,
+    #         detail='dishes not found'
+    #     )
 
     return dishes
 
@@ -67,7 +67,7 @@ def get_dish(dish_id: UUID):
             detail='dish not found'
         )
 
-    dish.price = dish.price
+    # dish.price = dish.price
 
     return dish
 
@@ -80,7 +80,7 @@ def get_dish(dish_id: UUID):
 def update_dish(dish_id: UUID, dish: DishBase):
     dish_update = db.query(Dish).get(dish_id)
 
-    if dish_id is None:
+    if dish_update is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='dish not found'

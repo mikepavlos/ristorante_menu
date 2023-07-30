@@ -12,4 +12,4 @@ RUN pip install --upgrade pip &&  \
 
 COPY . .
 
-CMD ["uvicorn", "menu_app.main:app", "--host", "0.0.0.0", "--reload"]
+#CMD ["uvicorn", "menu_app.main:app", "--host", "0.0.0.0", "--reload"]
