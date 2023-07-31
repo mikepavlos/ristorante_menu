@@ -1,8 +1,15 @@
-from fastapi import APIRouter, HTTPException, status
+from uuid import UUID
+
+from fastapi import APIRouter, status
+
 from menu_app.menu.schemas import DishBase, DishRead
-from menu_app.menu.models import Model, Submenu, Dish
-from menu_app.database import db, engine
-from uuid import UUID, uuid4
+from menu_app.menu.services.dish import (
+    dish_list,
+    dish_create,
+    dish_obj,
+    dish_update,
+    dish_delete
+)
 
 router = APIRouter()
 
@@ -13,15 +20,7 @@ router = APIRouter()
     status_code=status.HTTP_200_OK
 )
 def get_all_dishes():
-    dishes = db.query(Dish).all()
-
-    # if dishes is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail='dishes not found'
-    #     )
-
-    return dishes
+    return dish_list()
 
 
 @router.post(
@@ -30,27 +29,7 @@ def get_all_dishes():
     status_code=status.HTTP_201_CREATED
 )
 def create_dish(submenu_id: UUID, dish: DishBase):
-    submenu = db.query(Submenu).get(submenu_id)
-
-    if submenu is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'submenu with id {submenu_id} not found'
-        )
-
-    new_dish = Dish(
-        id=uuid4(),
-        title=dish.title,
-        description=dish.description,
-        price=dish.price,
-        submenu_id=submenu_id
-    )
-
-    db.add(new_dish)
-    db.commit()
-    db.refresh(new_dish)
-
-    return new_dish
+    return dish_create(submenu_id, dish)
 
 
 @router.get(
@@ -59,17 +38,7 @@ def create_dish(submenu_id: UUID, dish: DishBase):
     status_code=status.HTTP_200_OK
 )
 def get_dish(dish_id: UUID):
-    dish = db.query(Dish).get(dish_id)
-
-    if dish is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='dish not found'
-        )
-
-    # dish.price = dish.price
-
-    return dish
+    return dish_obj(dish_id)
 
 
 @router.patch(
@@ -78,36 +47,12 @@ def get_dish(dish_id: UUID):
     status_code=status.HTTP_200_OK
 )
 def update_dish(dish_id: UUID, dish: DishBase):
-    dish_update = db.query(Dish).get(dish_id)
-
-    if dish_update is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='dish not found'
-        )
-
-    dish_update.title = dish.title
-    dish_update.description = dish.description
-    dish_update.price = dish.price
-
-    db.commit()
-    db.refresh(dish_update)
-
-    return dish_update
+    return dish_update(dish_id, dish)
 
 
 @router.delete('/{dish_id}', status_code=status.HTTP_200_OK)
 def delete_dish(dish_id: UUID):
-    dish_to_delete = db.query(Dish).get(dish_id)
-
-    if dish_to_delete is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='dish not found'
-        )
-
-    db.delete(dish_to_delete)
-    db.commit()
+    dish_delete(dish_id)
 
     return {
         'status': 'true',

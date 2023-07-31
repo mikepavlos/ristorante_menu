@@ -1,10 +1,15 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
-from menu_app.database import db
-from menu_app.menu.models import Menu, Submenu, Dish
 from menu_app.menu.schemas import MenuBase, MenuRead
+from menu_app.menu.services.menu import (
+    menu_list,
+    menu_create,
+    menu_obj,
+    menu_update,
+    menu_delete
+)
 
 router = APIRouter()
 
@@ -15,18 +20,7 @@ router = APIRouter()
     status_code=status.HTTP_200_OK
 )
 def get_all_menus():
-    menus = db.query(Menu).all()
-
-    # if menus is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail='menus not found'
-    #     )
-
-    for menu in menus:
-        menu.submenus_count = db.query(Menu.id == Submenu.menu_id).count()
-
-    return menus
+    return menu_list()
 
 
 @router.post(
@@ -35,17 +29,7 @@ def get_all_menus():
     status_code=status.HTTP_201_CREATED
 )
 def create_menu(menu: MenuBase):
-    new_menu = Menu(
-        id=uuid4(),
-        title=menu.title,
-        description=menu.description,
-    )
-
-    db.add(new_menu)
-    db.commit()
-    db.refresh(new_menu)
-
-    return new_menu
+    return menu_create(menu)
 
 
 @router.get(
@@ -54,22 +38,7 @@ def create_menu(menu: MenuBase):
     status_code=status.HTTP_200_OK
 )
 def get_menu(menu_id: UUID):
-    menu = db.query(Menu).get(menu_id)
-
-    if menu is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='menu not found'
-        )
-
-    menu.submenus_count = db.query(Submenu.menu_id == menu_id).count()
-    menu.dishes_count = (
-        db.query(Dish.submenu_id == Submenu.id)
-        .where(Submenu.menu_id == menu_id)
-        .count()
-    )
-
-    return menu
+    return menu_obj(menu_id)
 
 
 @router.patch(
@@ -78,41 +47,12 @@ def get_menu(menu_id: UUID):
     status_code=status.HTTP_200_OK
 )
 def update_menu(menu_id: UUID, menu: MenuBase):
-    menu_update = db.query(Menu).get(menu_id)
-
-    if menu_update is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='menu not found'
-        )
-
-    menu_update.title = menu.title
-    menu_update.description = menu.description
-    menu_update.submenus_count = db.query(Submenu.menu_id == menu_id).count()
-    menu_update.dishes_count = (
-        db.query(Dish.submenu_id == Submenu.id)
-        .where(Submenu.menu_id == menu_id)
-        .count()
-    )
-
-    db.commit()
-    db.refresh(menu_update)
-
-    return menu_update
+    return menu_update(menu_id, menu)
 
 
 @router.delete('/{menu_id}', status_code=status.HTTP_200_OK)
 def delete_menu(menu_id: UUID):
-    menu = db.query(Menu).get(menu_id)
-
-    if menu is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='menu not found'
-        )
-
-    db.delete(menu)
-    db.commit()
+    menu_delete(menu_id)
 
     return {
         'status': 'true',
