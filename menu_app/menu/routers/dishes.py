@@ -1,17 +1,14 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
-from menu_app.menu.schemas import DishBase, DishRead
-from menu_app.menu.services.dish import (
-    dish_list,
-    dish_create,
-    dish_obj,
-    dish_update,
-    dish_delete
+from menu_app.menu.menu_services import DishService
+from menu_app.menu.schemas.schemas import DishIn, DishRead
+
+router = APIRouter(
+    prefix='/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes',
+    tags=['dishes']
 )
-
-router = APIRouter()
 
 
 @router.get(
@@ -19,8 +16,8 @@ router = APIRouter()
     response_model=list[DishRead],
     status_code=status.HTTP_200_OK
 )
-def get_all_dishes():
-    return dish_list()
+def get_all_dishes(dish: DishService = Depends()):
+    return dish.list()
 
 
 @router.post(
@@ -28,8 +25,12 @@ def get_all_dishes():
     response_model=DishRead,
     status_code=status.HTTP_201_CREATED
 )
-def create_dish(submenu_id: UUID, dish: DishBase):
-    return dish_create(submenu_id, dish)
+def create_dish(
+        submenu_id: UUID,
+        data: DishIn,
+        dish: DishService = Depends()
+):
+    return dish.create(submenu_id, data)
 
 
 @router.get(
@@ -37,8 +38,8 @@ def create_dish(submenu_id: UUID, dish: DishBase):
     response_model=DishRead,
     status_code=status.HTTP_200_OK
 )
-def get_dish(dish_id: UUID):
-    return dish_obj(dish_id)
+def get_dish(dish_id: UUID, dish: DishService = Depends()):
+    return dish.retrieve(dish_id)
 
 
 @router.patch(
@@ -46,15 +47,10 @@ def get_dish(dish_id: UUID):
     response_model=DishRead,
     status_code=status.HTTP_200_OK
 )
-def update_dish(dish_id: UUID, dish: DishBase):
-    return dish_update(dish_id, dish)
+def update_dish(dish_id: UUID, data: DishIn, dish: DishService = Depends()):
+    return dish.update(dish_id, data)
 
 
 @router.delete('/{dish_id}', status_code=status.HTTP_200_OK)
-def delete_dish(dish_id: UUID):
-    dish_delete(dish_id)
-
-    return {
-        'status': 'true',
-        'message': 'The dish has been deleted'
-    }
+def delete_dish(dish_id: UUID, dish: DishService = Depends()):
+    return dish.delete(dish_id)

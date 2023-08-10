@@ -1,17 +1,11 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
-from menu_app.menu.schemas import MenuBase, MenuRead
-from menu_app.menu.services.menu import (
-    menu_list,
-    menu_create,
-    menu_obj,
-    menu_update,
-    menu_delete
-)
+from menu_app.menu.menu_services import MenuService
+from menu_app.menu.schemas.schemas import MenuIn, MenuOut, MenuRead
 
-router = APIRouter()
+router = APIRouter(prefix='/api/v1/menus', tags=['menus'])
 
 
 @router.get(
@@ -19,17 +13,17 @@ router = APIRouter()
     response_model=list[MenuRead],
     status_code=status.HTTP_200_OK
 )
-def get_all_menus():
-    return menu_list()
+def get_all_menus(menu: MenuService = Depends()):
+    return menu.list()
 
 
 @router.post(
     '/',
-    response_model=MenuRead,
+    response_model=MenuOut,
     status_code=status.HTTP_201_CREATED
 )
-def create_menu(menu: MenuBase):
-    return menu_create(menu)
+def create_menu(data: MenuIn, menu: MenuService = Depends()):
+    return menu.create(data)
 
 
 @router.get(
@@ -37,24 +31,19 @@ def create_menu(menu: MenuBase):
     response_model=MenuRead,
     status_code=status.HTTP_200_OK
 )
-def get_menu(menu_id: UUID):
-    return menu_obj(menu_id)
+def get_menu(menu_id: UUID, menu: MenuService = Depends()):
+    return menu.retrieve(menu_id)
 
 
 @router.patch(
     '/{menu_id}',
-    response_model=MenuRead,
+    response_model=MenuOut,
     status_code=status.HTTP_200_OK
 )
-def update_menu(menu_id: UUID, menu: MenuBase):
-    return menu_update(menu_id, menu)
+def update_menu(menu_id: UUID, data: MenuIn, menu: MenuService = Depends()):
+    return menu.update(menu_id, data)
 
 
 @router.delete('/{menu_id}', status_code=status.HTTP_200_OK)
-def delete_menu(menu_id: UUID):
-    menu_delete(menu_id)
-
-    return {
-        'status': 'true',
-        'message': 'The menu has been deleted'
-    }
+def delete_menu(menu_id: UUID, menu: MenuService = Depends()):
+    return menu.delete(menu_id)

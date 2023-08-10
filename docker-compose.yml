@@ -4,6 +4,26 @@ volumes:
   db_data:
 
 services:
+  db:
+    image: postgres:15.1-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME} -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -17,12 +37,3 @@ services:
         condition: service_healthy
     entrypoint: >
       sh -c "uvicorn menu_app.main:app --host 0.0.0.0 --reload"
-
-  db:
-    image: postgres:15.1-alpine
-    volumes:
-      - db_data:/var/lib/postgresql/data/
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME} -U ${POSTGRES_USER}"]

@@ -3,6 +3,9 @@ version: '3.9'
 volumes:
   db_data_test:
 
+networks:
+  test_network:
+
 services:
   test:
     build:
@@ -10,19 +13,38 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST_TEST}
+      - REDIS=${REDIS_TEST}
     ports:
-      - "8001:8000"
+      - '8001:8000'
+    networks:
+      - test_network
     depends_on:
-      db:
+      db_test:
+        condition: service_healthy
+      redis_test:
         condition: service_healthy
     entrypoint: >
       sh -c "pytest tests -vv"
 
-  db:
+  db_test:
     image: postgres:15.1-alpine
     volumes:
       - db_data_test:/var/lib/postgresql/data/
+    networks:
+      - test_network
     env_file:
       - .env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME} -U ${POSTGRES_USER}"]
+
+  redis_test:
+    image: redis:latest
+    networks:
+      - test_network
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
