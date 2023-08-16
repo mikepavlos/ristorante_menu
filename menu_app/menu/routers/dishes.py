@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from menu_app.menu.menu_services import DishService
-from menu_app.menu.schemas.schemas import DishIn, DishRead
+from menu_app.menu.schemas import DishRead, DishWrite
 
 router = APIRouter(
     prefix='/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes',
@@ -27,7 +27,7 @@ def get_all_dishes(dish: DishService = Depends()):
 )
 def create_dish(
         submenu_id: UUID,
-        data: DishIn,
+        data: DishWrite,
         dish: DishService = Depends()
 ):
     return dish.create(submenu_id, data)
@@ -47,7 +47,7 @@ def get_dish(dish_id: UUID, dish: DishService = Depends()):
     response_model=DishRead,
     status_code=status.HTTP_200_OK
 )
-def update_dish(dish_id: UUID, data: DishIn, dish: DishService = Depends()):
+def update_dish(dish_id: UUID, data: DishWrite, dish: DishService = Depends()):
     return dish.update(dish_id, data)
 
 

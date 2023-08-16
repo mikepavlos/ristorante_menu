@@ -1,20 +1,18 @@
-from uuid import uuid4
-
 from fastapi import Depends
 from sqlalchemy import delete, distinct, exc, func, insert, select, update
 from sqlalchemy.orm import Session
 
-from menu_app.database import get_db
+from menu_app.database import get_session
 from menu_app.menu.models import Dish, Menu, Submenu
-from menu_app.menu.schemas.schemas import DishIn, MenuIn, SubmenuIn
+from menu_app.menu.schemas import DishWrite, MenuWrite, SubmenuWrite
 
 
 class MenuCrud:
-    def __init__(self, db: Session = Depends(get_db)):
-        self.db = db
+    def __init__(self, session: Session = Depends(get_session)):
+        self.session = session
 
     def all(self):
-        query = self.db.execute(
+        query = self.session.execute(
             select(
                 Menu.id,
                 Menu.title,
@@ -22,13 +20,13 @@ class MenuCrud:
                 func.count(distinct(Submenu.id)).label('submenus_count'),
                 func.count(distinct(Dish.id)).label('dishes_count'),
             )
-            .outerjoin(Submenu, Menu.id == Submenu.menu_id)
-            .outerjoin(Dish, Submenu.id == Dish.submenu_id)
+            .outerjoin(Menu.submenus)
+            .outerjoin(Submenu.dishes)
             .group_by(Menu.id)
         )
         return query.all()
 
-    def get(self, menu_id):
+    def get(self, menu_id: str):
         query = (
             select(
                 Menu.id,
@@ -38,46 +36,39 @@ class MenuCrud:
                 func.count(distinct(Dish.id)).label('dishes_count'),
             )
             .where(Menu.id == menu_id)
-            .outerjoin(Submenu, Menu.id == Submenu.menu_id)
-            .outerjoin(Dish, Submenu.id == Dish.submenu_id)
+            .outerjoin(Menu.submenus)
+            .outerjoin(Submenu.dishes)
             .group_by(Menu.id)
         )
+        return self.session.execute(query).first()
 
-        try:
-            obj = self.db.execute(query).first()
-        except exc.InternalError:
-            return
-
-        return obj
-
-    def create(self, data: MenuIn):
+    def create(self, data: MenuWrite):
         stmt = (
             insert(Menu)
             .values(
-                id=uuid4(),
-                **data.dict()
+                **data.model_dump()
             )
             .returning(Menu)
         )
-        menu = self.db.execute(stmt).first()
-        self.db.commit()
-        return menu
+        menu = self.session.scalars(stmt)
+        self.session.commit()
+        return menu.first()
 
-    def update(self, menu_id: str, data: MenuIn):
+    def update(self, menu_id: str, data: MenuWrite):
         stmt = (
             update(Menu)
             .where(Menu.id == menu_id)
-            .values(**data.dict())
+            .values(**data.model_dump())
             .returning(Menu)
         )
 
         try:
-            menu = self.db.execute(stmt).one()
+            menu = self.session.scalars(stmt)
         except exc.NoResultFound:
             return
 
-        self.db.commit()
-        return menu
+        self.session.commit()
+        return menu.first()
 
     def delete(self, menu_id: str):
         stmt = (
@@ -87,17 +78,17 @@ class MenuCrud:
         )
 
         try:
-            self.db.execute(stmt).one()
+            self.session.execute(stmt).one()
         except exc.NoResultFound:
             return
 
-        self.db.commit()
+        self.session.commit()
         return True
 
 
 class SubmenuCrud:
-    def __init__(self, db: Session = Depends(get_db)):
-        self.db = db
+    def __init__(self, session: Session = Depends(get_session)):
+        self.session = session
 
     def all(self):
         query = (
@@ -107,12 +98,12 @@ class SubmenuCrud:
                 Submenu.description,
                 func.count(distinct(Dish.id)).label('dishes_count'),
             )
-            .outerjoin(Dish, Submenu.id == Dish.submenu_id)
+            .outerjoin(Submenu.dishes)
             .group_by(Submenu.id)
         )
-        return self.db.execute(query).all()
+        return self.session.execute(query).all()
 
-    def get(self, submenu_id):
+    def get(self, submenu_id: str):
         query = (
             select(
                 Submenu.id,
@@ -121,46 +112,46 @@ class SubmenuCrud:
                 func.count(distinct(Dish.id)).label('dishes_count'),
             )
             .where(Submenu.id == submenu_id)
-            .outerjoin(Dish, Submenu.id == Dish.submenu_id)
+            .outerjoin(Submenu.dishes)
             .group_by(Submenu.id)
         )
-        return self.db.execute(query).first()
+        return self.session.execute(query).first()
 
-    def create(self, menu_id, data: SubmenuIn):
-        menu = self.db.scalar((select(Menu.id)).where(Menu.id == menu_id))
-        if not menu:
-            return
-
+    def create(self, menu_id: str, data: SubmenuWrite):
         stmt = (
             insert(Submenu)
             .values(
-                id=uuid4(),
-                **data.dict(),
+                **data.model_dump(),
                 menu_id=menu_id,
             )
             .returning(Submenu)
         )
-        submenu = self.db.execute(stmt).first()
-        self.db.commit()
-        return submenu
 
-    def update(self, submenu_id, data: SubmenuIn):
+        try:
+            submenu = self.session.scalars(stmt)
+        except exc.IntegrityError:
+            return
+
+        self.session.commit()
+        return submenu.first()
+
+    def update(self, submenu_id: str, data: SubmenuWrite):
         stmt = (
             update(Submenu)
             .where(Submenu.id == submenu_id)
-            .values(**data.dict())
+            .values(**data.model_dump())
             .returning(Submenu)
         )
 
         try:
-            submenu = self.db.execute(stmt).one()
+            submenu = self.session.scalars(stmt)
         except exc.NoResultFound:
             return
 
-        self.db.commit()
-        return submenu
+        self.session.commit()
+        return submenu.first()
 
-    def delete(self, submenu_id):
+    def delete(self, submenu_id: str):
         stmt = (
             delete(Submenu)
             .where(Submenu.id == submenu_id)
@@ -168,18 +159,17 @@ class SubmenuCrud:
         )
 
         try:
-            self.db.execute(stmt).one()
-        except (exc.NoResultFound, exc.DatabaseError):
-            self.db.rollback()
+            self.session.execute(stmt).one()
+        except exc.NoResultFound:
             return
 
-        self.db.commit()
+        self.session.commit()
         return True
 
 
 class DishCrud:
-    def __init__(self, db: Session = Depends(get_db)):
-        self.db = db
+    def __init__(self, session: Session = Depends(get_session)):
+        self.session = session
 
     def all(self):
         query = (
@@ -190,9 +180,9 @@ class DishCrud:
                 Dish.price,
             )
         )
-        return self.db.execute(query).all()
+        return self.session.execute(query).all()
 
-    def get(self, dish_id):
+    def get(self, dish_id: str):
         query = (
             select(
                 Dish.id,
@@ -202,42 +192,40 @@ class DishCrud:
             )
             .where(Dish.id == dish_id)
         )
-        return self.db.execute(query).first()
+        return self.session.execute(query).first()
 
-    def create(self, submenu_id: str, data: DishIn):
-        if not self.db.scalar(
-            (select(Submenu.id))
-            .where(Submenu.id == submenu_id)
-        ):
-            return
-
+    def create(self, submenu_id: str, data: DishWrite):
         stmt = (
             insert(Dish)
             .values(
-                id=uuid4(),
-                **data.dict(),
+                **data.model_dump(),
                 submenu_id=submenu_id,
             )
             .returning(Dish)
         )
-        dish = self.db.execute(stmt).first()
-        self.db.commit()
-        return dish
 
-    def update(self, dish_id: str, data: DishIn):
+        try:
+            dish = self.session.scalars(stmt)
+        except exc.IntegrityError:
+            return
+
+        self.session.commit()
+        return dish.first()
+
+    def update(self, dish_id: str, data: DishWrite):
         stmt = (
             update(Dish)
             .where(Dish.id == dish_id)
-            .values(**data.dict())
+            .values(**data.model_dump())
             .returning(Dish)
         )
 
         try:
-            dish = self.db.execute(stmt).one()
+            dish = self.session.scalars(stmt).one()
         except exc.NoResultFound:
             return
 
-        self.db.commit()
+        self.session.commit()
         return dish
 
     def delete(self, dish_id: str):
@@ -248,9 +236,9 @@ class DishCrud:
         )
 
         try:
-            self.db.execute(stmt).one()
+            self.session.execute(stmt).one()
         except exc.NoResultFound:
             return
 
-        self.db.commit()
+        self.session.commit()
         return True

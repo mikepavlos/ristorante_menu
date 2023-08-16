@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from menu_app.menu.menu_services import MenuService
-from menu_app.menu.schemas.schemas import MenuIn, MenuOut, MenuRead
+from menu_app.menu.schemas import MenuRead, MenuReturn, MenuWrite
 
 router = APIRouter(prefix='/api/v1/menus', tags=['menus'])
 
@@ -19,10 +19,10 @@ def get_all_menus(menu: MenuService = Depends()):
 
 @router.post(
     '/',
-    response_model=MenuOut,
+    response_model=MenuReturn,
     status_code=status.HTTP_201_CREATED
 )
-def create_menu(data: MenuIn, menu: MenuService = Depends()):
+def create_menu(data: MenuWrite, menu: MenuService = Depends()):
     return menu.create(data)
 
 
@@ -37,10 +37,10 @@ def get_menu(menu_id: UUID, menu: MenuService = Depends()):
 
 @router.patch(
     '/{menu_id}',
-    response_model=MenuOut,
+    response_model=MenuReturn,
     status_code=status.HTTP_200_OK
 )
-def update_menu(menu_id: UUID, data: MenuIn, menu: MenuService = Depends()):
+def update_menu(menu_id: UUID, data: MenuWrite, menu: MenuService = Depends()):
     return menu.update(menu_id, data)
 
 

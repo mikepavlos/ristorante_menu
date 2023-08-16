@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException
 from starlette import status
 
-from menu_app.menu.crud import DishCrud, MenuCrud, SubmenuCrud
-from menu_app.menu.schemas.schemas import SubmenuIn
+from menu_app.menu.repository import DishCrud, MenuCrud, SubmenuCrud
+from menu_app.menu.schemas import SubmenuWrite
 
 
 class MenuService:
@@ -92,7 +92,7 @@ class SubmenuService:
 
         return submenu
 
-    def update(self, submenu_id, data: SubmenuIn):
+    def update(self, submenu_id, data: SubmenuWrite):
         submenu = self.crud.update(submenu_id, data)
         if submenu is None:
             raise HTTPException(

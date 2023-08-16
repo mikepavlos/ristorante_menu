@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from menu_app.menu.menu_services import SubmenuService
-from menu_app.menu.schemas.schemas import SubmenuIn, SubmenuOut, SubmenuRead
+from menu_app.menu.schemas import SubmenuRead, SubmenuReturn, SubmenuWrite
 
 router = APIRouter(
     prefix='/api/v1/menus/{menu_id}/submenus',
@@ -22,12 +22,12 @@ def get_all_submenus(submenu: SubmenuService = Depends()):
 
 @router.post(
     '/',
-    response_model=SubmenuOut,
+    response_model=SubmenuReturn,
     status_code=status.HTTP_201_CREATED
 )
 def create_submenu(
         menu_id: UUID,
-        data: SubmenuIn,
+        data: SubmenuWrite,
         submenu: SubmenuService = Depends()
 ):
     return submenu.create(menu_id, data)
@@ -44,12 +44,12 @@ def get_submenu(submenu_id: UUID, submenu: SubmenuService = Depends()):
 
 @router.patch(
     '/{submenu_id}',
-    response_model=SubmenuOut,
+    response_model=SubmenuReturn,
     status_code=status.HTTP_200_OK
 )
 def update_submenu(
         submenu_id: UUID,
-        data: SubmenuIn,
+        data: SubmenuWrite,
         submenu: SubmenuService = Depends()
 ):
     return submenu.update(submenu_id, data)
