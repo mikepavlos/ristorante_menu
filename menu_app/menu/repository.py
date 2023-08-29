@@ -12,7 +12,7 @@ class MenuCrud:
         self.session = session
 
     def all(self):
-        query = self.session.execute(
+        query = (
             select(
                 Menu.id,
                 Menu.title,
@@ -24,7 +24,7 @@ class MenuCrud:
             .outerjoin(Submenu.dishes)
             .group_by(Menu.id)
         )
-        return query.all()
+        return self.session.execute(query).all()
 
     def get(self, menu_id: str):
         query = (

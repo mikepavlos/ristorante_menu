@@ -7,7 +7,7 @@ networks:
   test_network:
 
 services:
-  test:
+  menu_app_test:
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +15,7 @@ services:
       - .env
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST_TEST}
+      - POSTGRES_NAME=${POSTGRES_NAME_TEST}
       - REDIS=${REDIS_TEST}
     ports:
       - '8001:8000'
@@ -26,7 +27,7 @@ services:
       redis_test:
         condition: service_healthy
     entrypoint: >
-      sh -c "pytest tests -vv"
+      sh -c "pytest tests/endpoints_tests.py -vv"
 
   db_test:
     image: postgres:15.1-alpine
@@ -37,7 +38,7 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME} -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME_TEST} -U ${POSTGRES_USER}"]
 
   redis_test:
     image: redis:latest

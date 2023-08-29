@@ -1,11 +1,11 @@
 import json
 
-import redis
 from fastapi.encoders import jsonable_encoder
+from redis import Redis
 
 from menu_app.settings import settings
 
-r = redis.Redis(host=settings.REDIS, port=6379, decode_responses=True)
+r = Redis(host=settings.REDIS, port=6379, decode_responses=True)
 
 
 def set_cache(key, value):
