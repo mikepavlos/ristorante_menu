@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import Depends
 from sqlalchemy import delete, distinct, exc, func, insert, select, update
 from sqlalchemy.orm import Session
@@ -45,9 +47,7 @@ class MenuCrud:
     def create(self, data: MenuWrite):
         stmt = (
             insert(Menu)
-            .values(
-                **data.model_dump()
-            )
+            .values(**data.model_dump())
             .returning(Menu)
         )
         menu = self.session.scalars(stmt)
@@ -61,29 +61,19 @@ class MenuCrud:
             .values(**data.model_dump())
             .returning(Menu)
         )
-
-        try:
-            menu = self.session.scalars(stmt)
-        except exc.NoResultFound:
-            return
-
+        menu = self.session.scalars(stmt)
         self.session.commit()
         return menu.first()
 
-    def delete(self, menu_id: str):
+    def delete(self, menu_id: UUID):
         stmt = (
             delete(Menu)
             .where(Menu.id == menu_id)
             .returning(Menu)
         )
-
-        try:
-            self.session.execute(stmt).one()
-        except exc.NoResultFound:
-            return
-
+        menu = self.session.scalars(stmt)
         self.session.commit()
-        return True
+        return menu.first()
 
 
 class SubmenuCrud:
@@ -109,6 +99,7 @@ class SubmenuCrud:
                 Submenu.id,
                 Submenu.title,
                 Submenu.description,
+                Submenu.menu_id,
                 func.count(distinct(Dish.id)).label('dishes_count'),
             )
             .where(Submenu.id == submenu_id)
@@ -142,12 +133,7 @@ class SubmenuCrud:
             .values(**data.model_dump())
             .returning(Submenu)
         )
-
-        try:
-            submenu = self.session.scalars(stmt)
-        except exc.NoResultFound:
-            return
-
+        submenu = self.session.scalars(stmt)
         self.session.commit()
         return submenu.first()
 
@@ -157,14 +143,9 @@ class SubmenuCrud:
             .where(Submenu.id == submenu_id)
             .returning(Submenu)
         )
-
-        try:
-            self.session.execute(stmt).one()
-        except exc.NoResultFound:
-            return
-
+        submenu = self.session.scalars(stmt)
         self.session.commit()
-        return True
+        return submenu.first()
 
 
 class DishCrud:
@@ -183,16 +164,7 @@ class DishCrud:
         return self.session.execute(query).all()
 
     def get(self, dish_id: str):
-        query = (
-            select(
-                Dish.id,
-                Dish.title,
-                Dish.description,
-                Dish.price,
-            )
-            .where(Dish.id == dish_id)
-        )
-        return self.session.execute(query).first()
+        return self.session.get(Dish, dish_id)
 
     def create(self, submenu_id: str, data: DishWrite):
         stmt = (
@@ -219,14 +191,9 @@ class DishCrud:
             .values(**data.model_dump())
             .returning(Dish)
         )
-
-        try:
-            dish = self.session.scalars(stmt).one()
-        except exc.NoResultFound:
-            return
-
+        dish = self.session.scalars(stmt)
         self.session.commit()
-        return dish
+        return dish.first()
 
     def delete(self, dish_id: str):
         stmt = (
@@ -234,11 +201,6 @@ class DishCrud:
             .where(Dish.id == dish_id)
             .returning(Dish)
         )
-
-        try:
-            self.session.execute(stmt).one()
-        except exc.NoResultFound:
-            return
-
+        dish = self.session.scalars(stmt)
         self.session.commit()
-        return True
+        return dish.first()

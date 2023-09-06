@@ -16,7 +16,9 @@ router = APIRouter(
     response_model=list[SubmenuRead],
     status_code=status.HTTP_200_OK
 )
-def get_all_submenus(submenu: SubmenuService = Depends()):
+def get_all_submenus(
+    submenu: SubmenuService = Depends()
+):
     return submenu.list()
 
 
@@ -26,9 +28,9 @@ def get_all_submenus(submenu: SubmenuService = Depends()):
     status_code=status.HTTP_201_CREATED
 )
 def create_submenu(
-        menu_id: UUID,
-        data: SubmenuWrite,
-        submenu: SubmenuService = Depends()
+    menu_id: UUID,
+    data: SubmenuWrite,
+    submenu: SubmenuService = Depends()
 ):
     return submenu.create(menu_id, data)
 
@@ -38,7 +40,10 @@ def create_submenu(
     response_model=SubmenuRead,
     status_code=status.HTTP_200_OK
 )
-def get_submenu(submenu_id: UUID, submenu: SubmenuService = Depends()):
+def get_submenu(
+    submenu_id: UUID,
+    submenu: SubmenuService = Depends()
+):
     return submenu.retrieve(submenu_id)
 
 
@@ -48,13 +53,19 @@ def get_submenu(submenu_id: UUID, submenu: SubmenuService = Depends()):
     status_code=status.HTTP_200_OK
 )
 def update_submenu(
-        submenu_id: UUID,
-        data: SubmenuWrite,
-        submenu: SubmenuService = Depends()
+    submenu_id: UUID,
+    data: SubmenuWrite,
+    submenu: SubmenuService = Depends()
 ):
     return submenu.update(submenu_id, data)
 
 
-@router.delete('/{submenu_id}', status_code=status.HTTP_200_OK)
-def delete_submenu(submenu_id: UUID, submenu: SubmenuService = Depends()):
+@router.delete(
+    '/{submenu_id}',
+    status_code=status.HTTP_200_OK
+)
+def delete_submenu(
+    submenu_id: UUID,
+    submenu: SubmenuService = Depends()
+):
     return submenu.delete(submenu_id)

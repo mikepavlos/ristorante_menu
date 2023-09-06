@@ -8,8 +8,9 @@
 
 ### Стек
 - Python 3.11.2
-- FastAPI 0.95.0
-- SQLAlchemy 1.4.41
+- FastAPI 0.101.0
+- SQLAlchemy 2.0.20
+- Pydantic 2.1.1
 - PostgreSQL 15.1
 - Docker
 - Pytest 7.4.0

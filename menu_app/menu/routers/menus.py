@@ -13,7 +13,9 @@ router = APIRouter(prefix='/api/v1/menus', tags=['menus'])
     response_model=list[MenuRead],
     status_code=status.HTTP_200_OK
 )
-def get_all_menus(menu: MenuService = Depends()):
+def get_all_menus(
+    menu: MenuService = Depends()
+):
     return menu.list()
 
 
@@ -22,7 +24,10 @@ def get_all_menus(menu: MenuService = Depends()):
     response_model=MenuReturn,
     status_code=status.HTTP_201_CREATED
 )
-def create_menu(data: MenuWrite, menu: MenuService = Depends()):
+def create_menu(
+    data: MenuWrite,
+    menu: MenuService = Depends()
+):
     return menu.create(data)
 
 
@@ -31,7 +36,10 @@ def create_menu(data: MenuWrite, menu: MenuService = Depends()):
     response_model=MenuRead,
     status_code=status.HTTP_200_OK
 )
-def get_menu(menu_id: UUID, menu: MenuService = Depends()):
+def get_menu(
+    menu_id: UUID,
+    menu: MenuService = Depends()
+):
     return menu.retrieve(menu_id)
 
 
@@ -40,10 +48,20 @@ def get_menu(menu_id: UUID, menu: MenuService = Depends()):
     response_model=MenuReturn,
     status_code=status.HTTP_200_OK
 )
-def update_menu(menu_id: UUID, data: MenuWrite, menu: MenuService = Depends()):
+def update_menu(
+    menu_id: UUID,
+    data: MenuWrite,
+    menu: MenuService = Depends()
+):
     return menu.update(menu_id, data)
 
 
-@router.delete('/{menu_id}', status_code=status.HTTP_200_OK)
-def delete_menu(menu_id: UUID, menu: MenuService = Depends()):
+@router.delete(
+    '/{menu_id}',
+    status_code=status.HTTP_200_OK
+)
+def delete_menu(
+    menu_id: UUID,
+    menu: MenuService = Depends()
+):
     return menu.delete(menu_id)
