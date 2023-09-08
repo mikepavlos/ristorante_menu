@@ -7,8 +7,8 @@ from menu_app.cache import cache
 
 class CacheResponse:
     @staticmethod
-    def search(key):
-        return cache.keys(f'*{key}*')
+    def search(arg):
+        return cache.keys(f'*{arg}*')
 
     def set(self, key, value):
         cache.set(key, json.dumps(jsonable_encoder(value)))
@@ -17,6 +17,7 @@ class CacheResponse:
         if key := self.search(arg):
             return json.loads(cache.get(*key))
 
-    def clear(self, arg):
-        if keys := self.search(arg):
-            cache.delete(*keys)
+    def clear(self, *args):
+        for arg in args:
+            if keys := self.search(arg):
+                cache.delete(*keys)

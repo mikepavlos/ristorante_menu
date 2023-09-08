@@ -9,7 +9,7 @@ from menu_app.menu.repository import DishCrud, MenuCrud, SubmenuCrud
 
 class CheckExists:
     @staticmethod
-    def is_exists(arg=None, obj_name: str = 'object'):
+    def exist(arg=None, obj_name: str = 'object'):
         if arg is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -44,7 +44,7 @@ class MenuService:
             return menu_cache
 
         menu_db = self.crud.get(menu_id)
-        self.check.is_exists(menu_db, 'menu')
+        self.check.exist(menu_db, 'menu')
         self.cache.set(
             key=f'menu:{menu_id}',
             value=menu_db._asdict()
@@ -58,16 +58,14 @@ class MenuService:
 
     def update(self, menu_id, data):
         menu = self.crud.update(menu_id, data)
-        self.check.is_exists(menu, 'menu')
-        self.cache.clear(f'menu:{menu_id}')
-        self.cache.clear('menu:list')
+        self.check.exist(menu, 'menu')
+        self.cache.clear(f'menu:{menu_id}', 'menu:list')
         return menu
 
     def delete(self, menu_id: UUID):
         menu = self.crud.delete(menu_id)
-        self.check.is_exists(menu, 'menu')
-        self.cache.clear(menu_id)
-        self.cache.clear(':list')
+        self.check.exist(menu, 'menu')
+        self.cache.clear(menu_id, ':list')
         return {
             'status': 'true',
             'message': 'The menu has been deleted'
@@ -101,7 +99,7 @@ class SubmenuService:
             return submenu_cache
 
         submenu_db = self.crud.get(submenu_id)
-        self.check.is_exists(submenu_db, 'submenu')
+        self.check.exist(submenu_db, 'submenu')
         self.cache.set(
             key=f'sub:{submenu_id}:{submenu_db.menu_id}',
             value=submenu_db._asdict()
@@ -110,25 +108,20 @@ class SubmenuService:
 
     def create(self, menu_id, data):
         submenu = self.crud.create(menu_id, data)
-        self.check.is_exists(submenu, 'menu')
-        self.cache.clear('sub:list')
-        self.cache.clear('menu:list')
-        self.cache.clear(f'menu:{menu_id}')
+        self.check.exist(submenu, 'menu')
+        self.cache.clear('sub:list', 'menu:list', f'menu:{menu_id}')
         return submenu
 
     def update(self, submenu_id, data):
         submenu = self.crud.update(submenu_id, data)
-        self.check.is_exists(submenu, 'submenu')
-        self.cache.clear(f'sub:{submenu_id}')
-        self.cache.clear('sub:list')
+        self.check.exist(submenu, 'submenu')
+        self.cache.clear(f'sub:{submenu_id}', 'sub:list')
         return submenu
 
     def delete(self, submenu_id):
         submenu = self.crud.delete(submenu_id)
-        self.check.is_exists(submenu, 'submenu')
-        self.cache.clear(submenu_id)
-        self.cache.clear(f'menu:{submenu.menu_id}')
-        self.cache.clear(':list')
+        self.check.exist(submenu, 'submenu')
+        self.cache.clear(submenu_id, f'menu:{submenu.menu_id}', ':list')
         return {
             'status': 'true',
             'message': 'The submenu has been deleted'
@@ -162,7 +155,7 @@ class DishService:
             return dish_cache
 
         dish_db = self.crud.get(dish_id)
-        self.check.is_exists(dish_db, 'dish')
+        self.check.exist(dish_db, 'dish')
         submenu = dish_db.submenu
         self.cache.set(
             key=f'dish:{dish_id}:{submenu.id}:{submenu.menu_id}',
@@ -172,26 +165,29 @@ class DishService:
 
     def create(self, submenu_id, data):
         dish = self.crud.create(submenu_id, data)
-        self.check.is_exists(dish, 'submenu')
-        self.cache.clear(f'sub:{submenu_id}')
-        self.cache.clear(f'menu:{dish.submenu.menu_id}')
-        self.cache.clear(':list')
+        self.check.exist(dish, 'submenu')
+        self.cache.clear(
+            f'sub:{submenu_id}',
+            f'menu:{dish.submenu.menu_id}',
+            ':list'
+        )
         return dish
 
     def update(self, dish_id, data):
         dish = self.crud.update(dish_id, data)
-        self.check.is_exists(dish, 'dish')
-        self.cache.clear(f'dish:{dish_id}')
-        self.cache.clear('dish:list')
+        self.check.exist(dish, 'dish')
+        self.cache.clear(f'dish:{dish_id}', 'dish:list')
         return dish
 
     def delete(self, dish_id):
         dish = self.crud.delete(dish_id)
-        self.check.is_exists(dish, 'dish')
-        self.cache.clear(dish_id)
-        self.cache.clear(f'sub:{dish.submenu_id}')
-        self.cache.clear(f'menu:{dish.submenu.menu_id}')
-        self.cache.clear(':list')
+        self.check.exist(dish, 'dish')
+        self.cache.clear(
+            dish_id,
+            f'sub:{dish.submenu_id}',
+            f'menu:{dish.submenu.menu_id}',
+            ':list'
+        )
         return {
             'status': 'true',
             'message': 'The dish has been deleted'
