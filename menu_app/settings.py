@@ -14,17 +14,12 @@ class Settings(BaseSettings):
     DB_PORT: int
     REDIS: str
 
-    DB_USER_TEST: str | None = None
-    DB_PASS_TEST: str | None = None
-    DB_NAME_TEST: str | None = None
-    DB_HOST_TEST: str | None = None
-    DB_PORT_TEST: int | None = None
-
-    POSTGRES_USER: str | None
-    POSTGRES_PASSWORD: str | None
-    POSTGRES_NAME: str | None
-    POSTGRES_HOST_TEST: str | None
-    REDIS_TEST: str | None
+    DB_USER_TEST: str
+    DB_PASS_TEST: str
+    DB_NAME_TEST: str
+    DB_HOST_TEST: str
+    DB_PORT_TEST: int
+    REDIS_TEST: str
 
 
 settings = Settings()

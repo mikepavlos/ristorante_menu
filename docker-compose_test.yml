@@ -14,38 +14,38 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_HOST=${POSTGRES_HOST_TEST}
-      - POSTGRES_NAME=${POSTGRES_NAME_TEST}
+      - DB_NAME=${DB_NAME_TEST}
+      - DB_HOST=${DB_HOST_TEST}
+      - DB_PORT=${DB_PORT_TEST}
       - REDIS=${REDIS_TEST}
     ports:
       - '8001:8000'
+    depends_on:
+      - db_test
+      - redis_test
     networks:
       - test_network
-    depends_on:
-      db_test:
-        condition: service_healthy
-      redis_test:
-        condition: service_healthy
     entrypoint: >
       sh -c "pytest tests/endpoints_tests.py -vv"
 
   db_test:
     image: postgres:15.1-alpine
+    restart: always
     volumes:
       - db_data_test:/var/lib/postgresql/data/
-    networks:
-      - test_network
     env_file:
       - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_NAME_TEST} -U ${POSTGRES_USER}"]
+    environment:
+      - POSTGRES_DB=${DB_NAME_TEST}
+    ports:
+      - '5434:5434'
+    expose:
+      - '5434'
+    command: -p 5434
+    networks:
+      - test_network
 
   redis_test:
     image: redis:latest
     networks:
       - test_network
-    healthcheck:
-      test: [ "CMD-SHELL", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5

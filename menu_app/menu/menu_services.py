@@ -8,10 +8,6 @@ from menu_app.menu.repository import DishCrud, MenuCrud, SubmenuCrud
 
 
 class BaseService:
-    def __init__(self, cache, crud):
-        self.cache = cache
-        self.crud = crud
-
     @staticmethod
     def is_exists(obj=None, obj_name: str = 'object'):
         if obj is None:
@@ -27,7 +23,8 @@ class MenuService(BaseService):
         cache: CacheResponse = Depends(),
         crud: MenuCrud = Depends(),
     ):
-        super().__init__(cache, crud)
+        self.cache = cache
+        self.crud = crud
 
     def list(self):
         if menus_cache := self.cache.get('menu:list'):
@@ -79,7 +76,8 @@ class SubmenuService(BaseService):
         cache: CacheResponse = Depends(),
         crud: SubmenuCrud = Depends(),
     ):
-        super().__init__(cache, crud)
+        self.cache = cache
+        self.crud = crud
 
     def list(self):
         if submenus_cache := self.cache.get('sub:list'):
@@ -132,7 +130,8 @@ class DishService(BaseService):
         cache: CacheResponse = Depends(),
         crud: DishCrud = Depends(),
     ):
-        super().__init__(cache, crud)
+        self.cache = cache
+        self.crud = crud
 
     def list(self):
         if dishes_cache := self.cache.get('dish:list'):

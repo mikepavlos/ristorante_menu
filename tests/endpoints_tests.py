@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 from menu_app.menu.models import Dish, Menu, Submenu
 from tests.conftest import session
@@ -83,9 +83,7 @@ class TestMenuEndpoints:
 class TestSubmenuEndpoints:
 
     def test_get_all_submenus(self, client, submenu: Submenu):
-        response = client.get(
-            '/api/v1/menus/menu_id/submenus/'
-        )
+        response = client.get('/api/v1/menus/menu_id/submenus/')
         response_submenus = response.json()
         assert response.status_code == 200
         assert isinstance(response_submenus, list)
@@ -335,18 +333,25 @@ class TestCounts:
     def test_menu_counts(self, client, dish: Dish):
         endpoint = f'/api/v1/menus/{dish.submenu.menu_id}/'
 
-        responce_menu = client.get(endpoint)
-        assert responce_menu.json()['submenus_count'] == 1
-        assert responce_menu.json()['dishes_count'] == 1
+        response_menu = client.get(endpoint)
+        assert response_menu.json()['submenus_count'] == 1
+        assert response_menu.json()['dishes_count'] == 1
 
-        session.execute(delete(Dish).filter_by(id=dish.id))
-        session.commit()
-        responce_deleted_dish = client.get(endpoint)
-        assert responce_deleted_dish.json()['submenus_count'] == 1
-        assert responce_deleted_dish.json()['dishes_count'] == 0
+        client.delete(
+            f'/api/v1/'
+            f'menus/menu_id/'
+            f'submenus/submenu_id/'
+            f'dishes/{dish.id}'
+        )
+        response_deleted_dish = client.get(endpoint)
+        assert response_deleted_dish.json()['submenus_count'] == 1
+        assert response_deleted_dish.json()['dishes_count'] == 0
 
-        session.execute(delete(Submenu).filter_by(id=dish.submenu_id))
-        session.commit()
-        responce_deleted_submenu = client.get(endpoint)
-        assert responce_deleted_submenu.json()['submenus_count'] == 0
-        assert responce_deleted_submenu.json()['dishes_count'] == 0
+        client.delete(
+            f'/api/v1/'
+            f'menus/menu_id'
+            f'/submenus/{dish.submenu.id}'
+        )
+        response_deleted_submenu = client.get(endpoint)
+        assert response_deleted_submenu.json()['submenus_count'] == 0
+        assert response_deleted_submenu.json()['dishes_count'] == 0
